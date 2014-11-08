@@ -1,0 +1,72 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+version = '1.0'
+
+sourceSets {
+	gen {
+		java {
+			srcDir 'src/gen/java'
+		}
+		resources {
+			srcDir 'src/gen/resources'
+		}
+	}
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	compile sourceSets.gen.output
+	compile gradleApi()
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+test {
+    systemProperties 'property': 'value'
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'javapp', 'Implementation-Version': "${version}"
+    }
+}
+
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}
+
+task preprocess(type: Exec) {
+	def srcFile = file('./src/raw/java/javapp.java')
+	def dstFile = file('./src/gen/java/javapp.java')
+	inputs.file srcFile
+	outputs.file dstFile
+	workingDir '.'
+	commandLine 'cpp', '-P', '-C', srcFile
+	
+	doFirst {
+		errorOutput new ByteArrayOutputStream()
+		standardOutput = new FileOutputStream(dstFile)
+	}
+}
+
+compileGenJava.dependsOn preprocess
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2-rc-2'
+}
+
+task cleanPreprocessed(type: Delete) {
+	delete fileTree('.') {
+		include 'src/gen/java/**/*'
+	}
+}
+
+clean.dependsOn cleanPreprocessed

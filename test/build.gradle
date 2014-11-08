@@ -1,0 +1,13 @@
+buildscript {
+	dependencies {
+		classpath fileTree(dir: '../build/libs/', include: '*.jar')
+	}
+}
+
+
+task preprocess(type: com.spritzinc.tools.gradle.javapp.JavaPPTask) {
+	from fileTree('raw') {
+		include '**/*.java'
+	}
+	to file('gen')
+}
