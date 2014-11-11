@@ -2,4 +2,4 @@
 .settings/
 build/
 bin/
-test/gen/
+test/src/gen/
