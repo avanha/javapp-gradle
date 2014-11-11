@@ -10,10 +10,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileTree;
-import org.gradle.api.tasks.Exec;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
@@ -28,20 +26,46 @@ import org.gradle.process.internal.ExecActionFactory;
 public class JavaPPTask extends DefaultTask {
 	private ConfigurableFileTree files;
 	private File outputDir;
-	
+	private List<String> defines = new ArrayList<String>();
 	private List<Spec> specs;
+	private String preprocessor = "cpp";
+	private List<String> args = new ArrayList<String>();
 	
 	public JavaPPTask() {
+		args.add("-C");
+		args.add("-P");
 	}
 
-	public void from(ConfigurableFileTree files) {
-		this.files = files;
+	public JavaPPTask args(String... args) {
+		
 	}
 	
-	public void to(File to) {
-		this.outputDir = to; 
+	public JavaPPTask define(String... defines) {
+		for (String define : defines) {
+			this.defines.add(define);
+		}
+		
+		return this;
+	}
+	
+	public JavaPPTask from(ConfigurableFileTree files) {
+		this.files = files;
+		
+		return this;
 	}
 
+	public JavaPPTask preprocessor(String preprocessor) {
+		this.preprocessor = preprocessor;
+		
+		return this;
+	}
+	
+	public JavaPPTask to(File to) {
+		this.outputDir = to;
+		
+		return this;
+	}
+	
 	/**
      * Returns the source files for this task.
      * 
@@ -61,6 +85,11 @@ public class JavaPPTask extends DefaultTask {
     	return source; 
     }
     
+    /**
+     * Retruns output files for this task
+     * 
+     * @return The output files.
+     */
     @OutputFiles
     public List<File> getTarget() {
     	System.out.println("PreProcessFilesAction.getTarget()");
@@ -80,6 +109,8 @@ public class JavaPPTask extends DefaultTask {
 		System.out.println("PreProcessFilesAction.execute(). files: " + files);
 		
 		List<Spec> specs = getSpecs();
+		List<String> commandArgs = new ArrayList<3>
+		
 		
 		for (Spec spec : specs) {
 			System.out.println(spec.in.toString() + "->" + spec.out.toString());
