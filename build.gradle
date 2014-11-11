@@ -60,7 +60,7 @@ task preprocess(type: Exec) {
 compileGenJava.dependsOn preprocess
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2-rc-2'
+    gradleVersion = '2.2'
 }
 
 task cleanPreprocessed(type: Delete) {
