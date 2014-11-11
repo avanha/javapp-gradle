@@ -1,26 +1,38 @@
 package com.spritzinc.tools.gradle.javapp;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
+import org.apache.commons.io.IOUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileTree;
-import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.Exec;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.StopActionException;
+import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.process.ExecResult;
+import org.gradle.process.internal.ExecAction;
+import org.gradle.process.internal.ExecActionFactory;
 
 public class JavaPPTask extends DefaultTask {
 	private ConfigurableFileTree files;
 	private File outputDir;
 	
 	private List<Spec> specs;
+	
+	public JavaPPTask() {
+	}
 
 	public void from(ConfigurableFileTree files) {
 		this.files = files;
@@ -71,9 +83,38 @@ public class JavaPPTask extends DefaultTask {
 		
 		for (Spec spec : specs) {
 			System.out.println(spec.in.toString() + "->" + spec.out.toString());
+			ExecAction execAction = getExecActionFactory().newExecAction();
+			execAction.commandLine("cpp", "-C", "-P", spec.in.getPath());
+			execAction.setErrorOutput(System.err);
+
+			FileOutputStream out = null;
+			
+			try {
+				out = new FileOutputStream(spec.out);
+				
+				try {
+					execAction.setStandardOutput(out);
+					ExecResult result = execAction.execute();
+					out.flush();
+					result.assertNormalExitValue();
+				} finally {
+					try {
+						out.close();
+					} catch (IOException e) {
+						// Ignore
+					}
+				}
+			} catch (IOException e) {
+				throw new StopExecutionException("IO Exception processing " + spec.out.getPath());
+			}
 		}
 	}
 	
+	
+    @Inject
+    protected ExecActionFactory getExecActionFactory() {
+        throw new UnsupportedOperationException();
+    }
 	
 	private List<Spec> getSpecs() {
 		if (specs == null) {
