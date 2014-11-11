@@ -8,6 +8,7 @@ import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.Stack;
@@ -194,6 +195,23 @@ public class JavaPP {
 
     
     public void define( String defname ) {
+    	
+    	if( patterns == null )
+        {
+            patterns   = new LinkedList<Pattern>() ;
+            
+            outputs    = new LinkedList<String>() ;
+            
+            patstrings = new LinkedList<String>() ;
+            
+            if( ( patterns == null ) || ( outputs == null ) || ( patstrings == null ) )
+            {
+                report( "Could not create internal data structure to store macros." ) ;
+                
+                return ;
+            }
+        }
+    	
         defname = makeToken( defname ) ;
         
         int pos = -1 ;
@@ -950,7 +968,7 @@ public class JavaPP {
 
 
 
-    public void processMain()
+    public void processMain(PrintStream out)
     {
         int i = 0 ;
         int j = 0 ;
@@ -1058,7 +1076,7 @@ public class JavaPP {
                 
                 // output this line and continue
                 
-                if( ( ! linechanged ) && ( ( iflevel == 0 ) || ( ( iflevel > 0 ) && ifstate.peek().booleanValue() ) ) ) { String[] souta = s.split( "\n" ) ; for( String sout : souta ) { outputlinecount++ ; System.out.println( sout ) ; } } ;
+                if( ( ! linechanged ) && ( ( iflevel == 0 ) || ( ( iflevel > 0 ) && ifstate.peek().booleanValue() ) ) ) { String[] souta = s.split( "\n" ) ; for( String sout : souta ) { outputlinecount++ ; out.println( sout ) ; } } ;
                 
                 continue ;
             }
@@ -1168,7 +1186,7 @@ public class JavaPP {
                     
                     currentfilename = fn ;
                     
-                    process( fn ) ;
+                    process( fn, out ) ;
                     
                     currentfilename = (String)( stack.pop() ) ;
                     
@@ -1909,7 +1927,7 @@ public class JavaPP {
     /**********************************************************
      */
      
-    public void process( String filename )
+    public void process( String filename, PrintStream out )
     {
         FileReader fr = null ;
         
@@ -2074,7 +2092,7 @@ public class JavaPP {
         
         if( patterns != null )
         {
-            processMain() ;
+            processMain( out ) ;
         }
         
         // finish up
@@ -2143,7 +2161,7 @@ public class JavaPP {
         
             // open each file argument in turn
             
-            processor.process( args[i] ) ;
+            processor.process( args[i], System.out ) ;
         }
     }
 }
