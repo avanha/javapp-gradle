@@ -25,7 +25,7 @@ if (!release) {
 
 println "Project: ${project.name}, Version: ${project.version}"
 
-// Since some of these components are used by Android, we need to stay compatible with 1.6.
+// Fix the version to make the build independent of the compilation JDK
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
@@ -41,6 +41,8 @@ dependencies {
 // Configure a common set of options for all compile types
 tasks.withType(AbstractCompile, { AbstractCompile ac ->
 	// Although not defined on AbstractCompile, options is always there
+	// Since we've fixed the source and target versions, explicitly define the compiler bootClasspath
+	// to ensure compilation uses the corresponding SDK (And eliminate the gradle warning).
 	ac.options.fork = true
 	ac.options.bootClasspath = "${java_1_7_bootClasspath}"
 	ac.options.encoding = 'UTF-8'
