@@ -9,5 +9,5 @@ task preprocess(type: com.spritzinc.tools.gradle.javapp.JavaPPTask) {
 	from fileTree('raw') {
 		include '**/*.java'
 	}
-	to file('gen')
+	to file('src/gen')
 }
