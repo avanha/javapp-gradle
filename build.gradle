@@ -1,72 +1,127 @@
 apply plugin: 'java'
+apply plugin: 'maven-publish'
 
-sourceCompatibility = 1.8
+project.group = "com.spritzinc.tools"
+project.version = "1.0.1"
+project.ext["buildTime"] = new java.util.Date();
 
-version = '1.0'
+def buildNum = System.getProperty("BUILD_NUMBER", null)
 
-sourceSets {
-	gen {
-		java {
-			srcDir 'src/gen/java'
-		}
-		resources {
-			srcDir 'src/gen/resources'
-		}
-	}
+if (buildNum == null) {
+	buildNum = System.getenv("BUILD_NUMBER")
 }
+
+if (buildNum == null) {
+	buildNum = "local"
+}
+
+if (!hasProperty("release")) {
+	ext["release"] = false
+}
+
+if (!release) {
+	project.version = project.version + "-SNAPSHOT"
+}
+
+println "Project: ${project.name}, Version: ${project.version}"
+
+// Fix the version to make the build independent of the compilation JDK
+sourceCompatibility = '1.7'
+targetCompatibility = '1.7'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-	compile sourceSets.gen.output
 	compile gradleApi()
     testCompile group: 'junit', name: 'junit', version: '4.+'
 }
 
-test {
-    systemProperties 'property': 'value'
-}
+// Configure a common set of options for all compile types
+tasks.withType(AbstractCompile, { AbstractCompile ac ->
+	// Although not defined on AbstractCompile, options is always there
+	// Since we've fixed the source and target versions, explicitly define the compiler bootClasspath
+	// to ensure compilation uses the corresponding SDK (And eliminate the gradle warning).
+	ac.options.fork = true
+	ac.options.bootClasspath = "${java_1_7_bootClasspath}"
+	ac.options.encoding = 'UTF-8'
+})
 
 jar {
-    manifest {
-        attributes 'Implementation-Title': 'javapp', 'Implementation-Version': "${version}"
-    }
+	manifest {
+		attributes(
+			"Implementation-Title": "${project.group}.${project.name}",
+			"Implementation-Version": project.version,
+			"Built-By": System.getProperty("user.name"),
+			"Build-Time": project.buildTime,
+			"Build-Jdk": "${System.getProperty('java.vendor')} ${System.getProperty('java.version')}")
+	}
 }
 
-uploadArchives {
-    repositories {
-       flatDir {
-           dirs 'repos'
-       }
-    }
+task sourceJar(type: Jar, dependsOn: classes) {
+	classifier = 'sources'
+	from sourceSets.main.allSource
 }
 
-task preprocess(type: Exec) {
-	def srcFile = file('./src/raw/java/javapp.java')
-	def dstFile = file('./src/gen/java/javapp.java')
-	inputs.file srcFile
-	outputs.file dstFile
-	workingDir '.'
-	commandLine 'cpp', '-P', '-C', srcFile
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
+}
+
+artifacts {
+	archives sourceJar
+	archives javadocJar
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+			artifact sourceJar
+			artifact javadocJar
+		}
+	}
+	
+	repositories {
+		maven {
+			credentials {
+				username "${spritz_nexus_username}"
+				password "${spritz_nexus_password}"
+			}
+			url "https://nexus.spritzinc.com/content/repositories/Public${release ? 'Releases' : 'Snapshots'}/"
+		}
+	}
+}
+
+task gitTag(type: Exec) {
+	doFirst {
+		println "Creating git tag"
+	}
+	
+	commandLine "git", "tag", "-m", "Release of ${project.name} ${project.version}", "${project.name}_${project.version}"
+}
+
+task gitPush(type: Exec, dependsOn: gitTag) {
+	doFirst {
+		println "Pushing git tag"
+	}
+	
+	commandLine "git", "push", "--tags"
+}
+
+task scm {
+	if (project.release) {
+		dependsOn "gitTag"
+		dependsOn "gitPush"
+	}
 	
 	doFirst {
-		errorOutput new ByteArrayOutputStream()
-		standardOutput = new FileOutputStream(dstFile)
+		println "Performing git operations..."
 	}
 }
-
-compileGenJava.dependsOn preprocess
+scm.enabled = release
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2'
+    gradleVersion = '1.12'
 }
-
-task cleanPreprocessed(type: Delete) {
-	delete fileTree('.') {
-		include 'src/gen/java/**/*'
-	}
-}
-
-clean.dependsOn cleanPreprocessed

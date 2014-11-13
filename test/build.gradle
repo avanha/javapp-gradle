@@ -4,10 +4,56 @@ buildscript {
 	}
 }
 
+apply plugin: 'java'
 
+sourceSets {
+	gen {
+		java {
+			srcDir 'src/gen/java'
+		}
+		resources {
+			srcDir 'src/gen/resources'
+		}
+	}
+}
+
+dependencies {
+	compile sourceSets.gen.output
+}
+
+// Code generations task
+task gen
+
+// Compilation of the "gen" source set depends on generating the input files
+compileGenJava.dependsOn gen
+
+// Run the preprocessor on all of our "raw" java files
 task preprocess(type: com.spritzinc.tools.gradle.javapp.JavaPPTask) {
-	from fileTree('raw') {
+	from fileTree('src/raw/java') {
 		include '**/*.java'
 	}
-	to file('src/gen')
+	to file('src/gen/java')
+	/*
+	//  These are the default values
+	preprocessor 'cpp'
+	clearArgs()
+	addArgs '-C', '-P'
+	defineOption '-D'
+	*/
+	define 'TEST', 'TEST2=yes'
 }
+
+// The gen task could do more than one thing.  For example we could do multiple preprocess steps, each with
+// different inputs and definitions
+gen.dependsOn preprocess
+
+// Clean the "gen" sources
+task cleanGen(type: Delete) {
+	delete fileTree('.') {
+		include 'src/gen/**/*'
+	}
+}
+
+// cleanGen should be included in a clean
+clean.dependsOn cleanGen
+
