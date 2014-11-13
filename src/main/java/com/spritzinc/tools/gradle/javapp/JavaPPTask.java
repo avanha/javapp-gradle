@@ -125,6 +125,14 @@ public class JavaPPTask extends DefaultTask {
 	public void process() {
 		getLogger().debug("execute(), files: " + files);
 		
+		ExecActionFactory factory;
+		
+		try {
+			factory = getExecActionFactory();
+		} catch (UnsupportedOperationException e) {
+			factory = getServices().get(ExecActionFactory.class); 
+		}
+		
 		List<Spec> specs = getSpecs();
 		List<String> commonArgs = new ArrayList<String>(args.size() + defines.size());
 		commonArgs.add(preprocessor);
@@ -141,7 +149,7 @@ public class JavaPPTask extends DefaultTask {
 			commandLine.addAll(commonArgs);
 			commandLine.add(spec.in.getPath());
 			
-			ExecAction execAction = getExecActionFactory().newExecAction();
+			ExecAction execAction = factory.newExecAction();
 			execAction.commandLine(commandLine);
 			execAction.setErrorOutput(System.err);
 
