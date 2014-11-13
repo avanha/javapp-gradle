@@ -123,5 +123,5 @@ task scm {
 scm.enabled = release
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.11'
+    gradleVersion = '1.12'
 }
