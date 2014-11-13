@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 project.group = "com.spritzinc.tools"
-project.version = "1.0.0"
+project.version = "1.0.1"
 project.ext["buildTime"] = new java.util.Date();
 
 def buildNum = System.getProperty("BUILD_NUMBER", null)
@@ -51,7 +51,7 @@ tasks.withType(AbstractCompile, { AbstractCompile ac ->
 jar {
 	manifest {
 		attributes(
-			"Implementation-Title": "${project.group}${project.name}",
+			"Implementation-Title": "${project.group}.${project.name}",
 			"Implementation-Version": project.version,
 			"Built-By": System.getProperty("user.name"),
 			"Build-Time": project.buildTime,
