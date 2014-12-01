@@ -192,6 +192,9 @@ public class JavaPPTask extends DefaultTask {
 				throw new StopActionException("No output directory defined");
 			}
 			
+			getLogger().info("Building specs, source dir: " + files.getDir().getPath() + 
+					" (" + files.getDir().getAbsolutePath() + ")");
+			
 			Set<File> inputs = files.getFiles();
 			List<Spec> specs = new ArrayList<Spec>(inputs.size());
 			Path base = files.getDir().toPath();
@@ -199,6 +202,7 @@ public class JavaPPTask extends DefaultTask {
 			for (File in : files.getFiles()) {
 				Path relative = base.relativize(in.toPath());
 				File out = new File(outputDir, relative.toString());
+				getLogger().info(in.getPath() + " -> " + out.getPath());
 				specs.add(new Spec(in, out));
 			}
 			
