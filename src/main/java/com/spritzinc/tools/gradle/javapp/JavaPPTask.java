@@ -90,14 +90,14 @@ public class JavaPPTask extends DefaultTask {
      */
     @InputFiles @SkipWhenEmpty @Optional
     public List<File> getSource() {
-    	getLogger().debug("getSource()");
-    	
     	List<Spec> specs = getSpecs();
     	List<File> source = new ArrayList<File>(specs.size());
     	
     	for (Spec spec : specs) {
     		source.add(spec.in);
     	}
+    	
+    	getLogger().debug("getSource(), " + source.size() + " files(s)");
     	
     	return source; 
     }
@@ -109,14 +109,14 @@ public class JavaPPTask extends DefaultTask {
      */
     @OutputFiles
     public List<File> getTarget() {
-    	getLogger().debug("getTarget()");
-    	
     	List<Spec> specs = getSpecs();
     	List<File> target = new ArrayList<File>(specs.size());
     	
     	for (Spec spec : specs) {
     		target.add(spec.out);
     	}
+    	
+    	getLogger().debug("getTarget(), " + target.size() + " file(s)");
     	
     	return target;
     }
