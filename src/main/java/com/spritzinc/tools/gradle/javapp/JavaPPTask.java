@@ -97,13 +97,13 @@ public class JavaPPTask extends DefaultTask {
     		source.add(spec.in);
     	}
     	
-    	getLogger().debug("getSource(), " + source.size() + " files(s)");
+    	getLogger().debug("getSource(), returning " + source.size() + " files(s)");
     	
     	return source; 
     }
     
     /**
-     * Retruns output files for this task
+     * Returns output files for this task
      * 
      * @return The output files.
      */
@@ -116,7 +116,7 @@ public class JavaPPTask extends DefaultTask {
     		target.add(spec.out);
     	}
     	
-    	getLogger().debug("getTarget(), " + target.size() + " file(s)");
+    	getLogger().debug("getTarget(), returning " + target.size() + " file(s)");
     	
     	return target;
     }
